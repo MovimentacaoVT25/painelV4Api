@@ -2,22 +2,22 @@
   "version": 2,
   "builds": [
     {
-      "src": "fonte/main.py",
+      "src": "src/main.py",
       "use": "@vercel/python"
     },
     {
-      "src": "fonte/static/**/*",
+      "src": "src/static/**/*",
       "use": "@vercel/static"
     }
   ],
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "fonte/main.py"
+      "dest": "src/main.py"
     },
     {
       "src": "/(.*)",
-      "dest": "/fonte/static/$1"
+      "dest": "/src/static/$1"
     }
   ]
 }
