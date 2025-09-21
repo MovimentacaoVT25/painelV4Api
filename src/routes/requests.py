@@ -1,13 +1,17 @@
 import traceback
 from flask import Blueprint, jsonify, request
-from src.models.request import Request, db
+# Correção: Import relativo
+from models.request import Request, db
 from datetime import datetime
 
 requests_bp = Blueprint('requests', __name__)
 
-# Rota para obter todas as solicitações (sem alterações)
+# O resto do arquivo (todas as rotas @requests_bp.route) continua exatamente o mesmo de antes.
+# Apenas a linha 'from models.request...' acima foi alterada.
+
 @requests_bp.route('/requests', methods=['GET'])
 def get_all_requests():
+    """Retorna todas as solicitações"""
     try:
         requests_list = Request.query.order_by(Request.timestamp.desc()).all()
         return jsonify([req.to_dict() for req in requests_list])
@@ -15,7 +19,6 @@ def get_all_requests():
         print(traceback.format_exc())
         return jsonify({'success': False, 'message': 'Erro interno ao buscar solicitações.', 'error': str(e)}), 500
 
-# Rota para criar uma nova solicitação (COM ALTERAÇÃO)
 @requests_bp.route('/requests', methods=['POST'])
 def create_request():
     """Cria uma nova solicitação"""
@@ -30,9 +33,6 @@ def create_request():
             tipo_operacao=data.get('tipo_operacao'),
             codigo_item=data.get('codigo_item'),
             localizacao=data.get('localizacao', ''),
-            # =============================================
-            # CAMPO DE OBSERVAÇÃO ADICIONADO
-            # =============================================
             observacao=data.get('observacao', ''),
             tempo_atendimento=data.get('tempo_atendimento') 
         )
@@ -46,7 +46,6 @@ def create_request():
         db.session.rollback()
         return jsonify({'success': False, 'message': 'Erro interno ao criar solicitação.', 'error': str(e), 'traceback': traceback.format_exc()}), 500
 
-# Rota para atualizar uma solicitação (sem alterações)
 @requests_bp.route('/requests/<emp_id>', methods=['PUT'])
 def update_request_status(emp_id):
     """Atualiza o status e/ou observação de uma solicitação"""
@@ -65,10 +64,7 @@ def update_request_status(emp_id):
             elif new_status == 'concluido':
                 req_to_update.conclusao_atendimento = datetime.utcnow()
 
-        # A observação agora vem do formulário, então a lógica de adicionar observação aqui foi simplificada.
-        # Poderíamos ainda permitir que o operador adicione mais observações se quiséssemos.
         if 'observacao' in data:
-            # Concatena a nova observação com a existente, se houver.
             nova_obs = data.get('observacao')
             if req_to_update.observacao:
                 req_to_update.observacao += f"\n[OPERADOR]: {nova_obs}"
@@ -83,7 +79,6 @@ def update_request_status(emp_id):
         db.session.rollback()
         return jsonify({'success': False, 'message': 'Erro interno ao atualizar solicitação.', 'error': str(e), 'traceback': traceback.format_exc()}), 500
 
-# Rota de estatísticas (sem alterações)
 @requests_bp.route('/requests/stats', methods=['GET'])
 def get_request_stats():
     """Retorna as estatísticas das solicitações"""
