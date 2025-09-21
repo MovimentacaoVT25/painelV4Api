@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solicitação de Empilhadeira</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚛</text></svg>">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary-color: #4285f4; --secondary-color: #34a853; --danger-color: #ea4335;
+            --warning-color: #fbbc04; --background: #f8f9fa; --card-background: #ffffff;
+            --text-primary: #202124; --text-secondary: #5f6368; --border-color: #dadce0;
+            --shadow: 0 1px 3px rgba(60,64,67,0.3); --border-radius: 8px;
+        }
+        body { font-family: 'Google Sans', 'Roboto', sans-serif; background: var(--background); color: var(--text-primary); line-height: 1.6; }
+        .container { max-width: 640px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #4285f4 0%, #34a853 100%); color: white; padding: 40px 30px; border-radius: var(--border-radius) var(--border-radius) 0 0; text-align: center; position: relative; overflow: hidden; }
+        .header::before { content: ''; position: absolute; top: 0; right: 0; width: 200px; height: 200px; background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="60" fill="white" opacity="0.2">🚛</text></svg>') no-repeat center; background-size: contain; }
+        .header h1 { font-size: 2.5rem; font-weight: 400; margin-bottom: 10px; position: relative; z-index: 1; }
+        .header p { font-size: 1.1rem; opacity: 0.9; position: relative; z-index: 1; }
+        .form-container { background: var(--card-background); border-radius: 0 0 var(--border-radius) var(--border-radius); box-shadow: var(--shadow); padding: 30px; }
+        .required-note { color: var(--danger-color); font-size: 0.9rem; margin-bottom: 30px; }
+        .form-group { margin-bottom: 30px; }
+        .form-label { display: flex; align-items: center; gap: 8px; font-size: 1rem; font-weight: 500; color: var(--text-primary); margin-bottom: 12px; }
+        .form-label .required { color: var(--danger-color); }
+        .form-input { width: 100%; padding: 12px 16px; border: 2px solid var(--border-color); border-radius: var(--border-radius); font-size: 1rem; transition: all 0.3s ease; background: var(--card-background); }
+        .form-input:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.1); }
+        .form-input.error { border-color: var(--danger-color); }
+        .radio-group { display: grid; gap: 12px; }
+        .radio-option { display: flex; align-items: center; padding: 12px 16px; border: 2px solid var(--border-color); border-radius: var(--border-radius); cursor: pointer; transition: all 0.3s ease; background: var(--card-background); }
+        .radio-option:hover { border-color: var(--primary-color); background: rgba(66, 133, 244, 0.05); }
+        .radio-option.selected { border-color: var(--primary-color); background: rgba(66, 133, 244, 0.1); }
+        .radio-option input[type="radio"] { margin-right: 12px; }
+        .radio-option label { cursor: pointer; font-size: 1rem; display: flex; align-items: center; gap: 8px; width: 100%; }
+        .submit-btn { background: var(--primary-color); color: white; border: none; padding: 16px 32px; border-radius: var(--border-radius); font-size: 1.1rem; font-weight: 500; cursor: pointer; transition: all 0.3s ease; width: 100%; margin-top: 20px; }
+        .submit-btn:hover { background: #3367d6; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(66, 133, 244, 0.3); }
+        .submit-btn:disabled { background: var(--text-secondary); cursor: not-allowed; transform: none; }
+        .success-message { background: var(--secondary-color); color: white; padding: 20px; border-radius: var(--border-radius); text-align: center; margin-top: 20px; display: none; }
+        .error-message { color: var(--danger-color); font-size: 0.9rem; margin-top: 5px; display: none; }
+        .loading { display: none; text-align: center; padding: 20px; }
+        .loading-spinner { width: 40px; height: 40px; border: 4px solid var(--border-color); border-top: 4px solid var(--primary-color); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 15px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @media (max-width: 768px) { .container { padding: 10px; } .header { padding: 30px 20px; } .header h1 { font-size: 2rem; } .form-container { padding: 20px; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Solicitação de Empilhadeira</h1>
+            <p>Sistema Integrado de Atendimento</p>
+        </div>
+        
+        <div class="form-container">
+            <p class="required-note">* Indica pergunta obrigatória</p>
+            
+            <form id="requestForm">
+                <!-- Solicitante -->
+                <div class="form-group">
+                    <label class="form-label">
+                        👤 Solicitante <span class="required">*</span>
+                    </label>
+                    <input type="text" id="solicitante" name="solicitante" class="form-input" required>
+                    <div class="error-message" id="solicitante-error">Este campo é obrigatório</div>
+                </div>
+
+                <!-- Área Solicitante -->
+                <div class="form-group">
+                    <label class="form-label">
+                        🏢 Área Solicitante <span class="required">*</span>
+                    </label>
+                    <div class="radio-group" id="area-group">
+                        <div class="radio-option">
+                            <input type="radio" id="area1" name="area_solicitante" value="🏭Injeção de Alumínio" required>
+                            <label for="area1">🏭 Injeção de Alumínio</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" id="area2" name="area_solicitante" value="🧪Injeção PPS" required>
+                            <label for="area2">🧪 Injeção PPS</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" id="area3" name="area_solicitante" value="🚚Logística" required>
+                            <label for="area3">🚚 Logística</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" id="area4" name="area_solicitante" value="🛠️Montagem Manual" required>
+                            <label for="area4">🛠️ Montagem Manual</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" id="area5" name="area_solicitante" value="🤖Montagem Automatizada" required>
+                            <label for="area5">🤖 Montagem Automatizada</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" id="area6" name="area_solicitante" value="🔧Manutenção INJ" required>
+                            <label for="area6">🔧 Manutenção INJ</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" id="area7" name="area_solicitante" value="🔩Torno" required>
+                            <label for="area7">🔩 Torno</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" id="area8" name="area_solicitante" value="⚙️Usinagem" required>
+                            <label for="area8">⚙️ Usinagem</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" id="area9" name="area_solicitante" value="⭐Qualidade" required>
+                            <label for="area9">⭐ Qualidade</label>
+                        </div>
+                    </div>
+                    <div class="error-message" id="area-error">Selecione uma área</div>
+                </div>
+
+                <!-- Tipo de Operação -->
+                <div class="form-group">
+                    <label class="form-label">
+                        📋 Tipo de Operação <span class="required">*</span>
+                    </label>
+                    <div class="radio-group" id="operacao-group">
+                        <div class="radio-option">
+                            <input type="radio" id="op1" name="tipo_operacao" value="🟠Entrega" required>
+                            <label for="op1">📦 Entrega</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" id="op2" name="tipo_operacao" value="🔵Guarda" required>
+                            <label for="op2">🔒 Guarda</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" id="op3" name="tipo_operacao" value="✅Validação" required>
+                            <label for="op3">✔️ Validação</label>
+                        </div>
+                    </div>
+                    <div class="error-message" id="operacao-error">Selecione um tipo de operação</div>
+                </div>
+
+                <!-- Código do Item -->
+                <div class="form-group">
+                    <label class="form-label">
+                        🏷️ Código do Item <span class="required">*</span>
+                    </label>
+                    <input type="text" id="codigo_item" name="codigo_item" class="form-input" placeholder="Ex: 14.100.7010" required>
+                    <div class="error-message" id="codigo-error">Este campo é obrigatório</div>
+                </div>
+
+                <!-- Localização -->
+                <div class="form-group">
+                    <label class="form-label">
+                        📍 Localização (opcional)
+                    </label>
+                    <input type="text" id="localizacao" name="localizacao" class="form-input" placeholder="Ex: Estante A-15, Almoxarifado Central">
+                </div>
+
+                <!-- Tempo de Atendimento -->
+                <div class="form-group">
+                    <label class="form-label">
+                        ⏱️ Tempo de Atendimento <span class="required">*</span>
+                    </label>
+                    <div class="radio-group" id="tempo-group">
+                        <div class="radio-option">
+                            <input type="radio" id="tempo1" name="tempo_atendimento" value="🚨00:15 (Urgente)" required>
+                            <label for="tempo1">🚨 00:15 (Urgente)</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" id="tempo2" name="tempo_atendimento" value="🟡00:30 (Moderado)" required>
+                            <label for="tempo2">🟡 00:30 (Moderado)</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" id="tempo3" name="tempo_atendimento" value="🟢01:00 (Normal)" required>
+                            <label for="tempo3">🟢 01:00 (Normal)</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" id="tempo4" name="tempo_atendimento" value="🔵02:00 (Padrão)" required>
+                            <label for="tempo4">🔵 02:00 (Padrão)</label>
+                        </div>
+                    </div>
+                    <div class="error-message" id="tempo-error">Selecione um tempo de atendimento</div>
+                </div>
+
+                <button type="submit" class="submit-btn" id="submitBtn">
+                    Enviar Solicitação
+                </button>
+            </form>
+
+            <div class="loading" id="loading">
+                <div class="loading-spinner"></div>
+                <p>Enviando solicitação...</p>
+            </div>
+
+            <div class="success-message" id="successMessage">
+                <h3>✅ Solicitação enviada com sucesso!</h3>
+                <p>Sua solicitação foi registrada e será processada em breve.</p>
+                <p><strong>ID da solicitação:</strong> <span id="requestId"></span></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('requestForm');
+            const submitBtn = document.getElementById('submitBtn');
+            const loading = document.getElementById('loading');
+            const successMessage = document.getElementById('successMessage');
+            const requestIdSpan = document.getElementById('requestId');
+
+            // Adicionar interatividade aos radio buttons
+            document.querySelectorAll('.radio-option').forEach(option => {
+                option.addEventListener('click', () => {
+                    const radio = option.querySelector('input[type="radio"]');
+                    const group = option.closest('.radio-group');
+                    
+                    // Remover seleção anterior
+                    group.querySelectorAll('.radio-option').forEach(opt => {
+                        opt.classList.remove('selected');
+                    });
+                    
+                    // Adicionar seleção atual
+                    radio.checked = true;
+                    option.classList.add('selected');
+                });
+            });
+
+            // Validação em tempo real
+            const validateField = (field, errorElement, message) => {
+                if (!field.value.trim()) {
+                    field.classList.add('error');
+                    errorElement.textContent = message;
+                    errorElement.style.display = 'block';
+                    return false;
+                } else {
+                    field.classList.remove('error');
+                    errorElement.style.display = 'none';
+                    return true;
+                }
+            };
+
+            // Validação de radio groups
+            const validateRadioGroup = (groupName, errorElement, message) => {
+                const selected = document.querySelector(`input[name="${groupName}"]:checked`);
+                if (!selected) {
+                    errorElement.textContent = message;
+                    errorElement.style.display = 'block';
+                    return false;
+                } else {
+                    errorElement.style.display = 'none';
+                    return true;
+                }
+            };
+
+            // Submissão do formulário
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                // Validar todos os campos
+                let isValid = true;
+                
+                isValid &= validateField(
+                    document.getElementById('solicitante'),
+                    document.getElementById('solicitante-error'),
+                    'Este campo é obrigatório'
+                );
+                
+                isValid &= validateField(
+                    document.getElementById('codigo_item'),
+                    document.getElementById('codigo-error'),
+                    'Este campo é obrigatório'
+                );
+                
+                isValid &= validateRadioGroup(
+                    'area_solicitante',
+                    document.getElementById('area-error'),
+                    'Selecione uma área'
+                );
+                
+                isValid &= validateRadioGroup(
+                    'tipo_operacao',
+                    document.getElementById('operacao-error'),
+                    'Selecione um tipo de operação'
+                );
+                
+                isValid &= validateRadioGroup(
+                    'tempo_atendimento',
+                    document.getElementById('tempo-error'),
+                    'Selecione um tempo de atendimento'
+                );
+
+                if (!isValid) return;
+
+                // Mostrar loading
+                form.style.display = 'none';
+                loading.style.display = 'block';
+
+                try {
+                    // Coletar dados do formulário
+                    const formData = new FormData(form);
+                    const data = Object.fromEntries(formData.entries());
+
+                    // Enviar para API
+                    const response = await fetch('/api/requests', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(data)
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        // Mostrar sucesso
+                        loading.style.display = 'none';
+                        successMessage.style.display = 'block';
+                        requestIdSpan.textContent = result.data.id;
+                        
+                        // Reset form após 3 segundos
+                        setTimeout(() => {
+                            form.reset();
+                            form.style.display = 'block';
+                            successMessage.style.display = 'none';
+                            document.querySelectorAll('.radio-option').forEach(opt => {
+                                opt.classList.remove('selected');
+                            });
+                        }, 5000);
+                    } else {
+                        throw new Error(result.message || 'Erro ao enviar solicitação');
+                    }
+                } catch (error) {
+                    console.error('Erro:', error);
+                    loading.style.display = 'none';
+                    form.style.display = 'block';
+                    alert('Erro ao enviar solicitação. Tente novamente.');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

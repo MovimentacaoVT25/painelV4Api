@@ -1,0 +1,62 @@
+nohup: ignoring input
+ * Serving Flask app 'main'
+ * Debug mode: on
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://169.254.0.21:5000
+[33mPress CTRL+C to quit[0m
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 127-160-917
+127.0.0.1 - - [20/Sep/2025 17:03:06] "HEAD / HTTP/1.1" 200 -
+127.0.0.1 - - [20/Sep/2025 17:03:09] "GET /formulario.html HTTP/1.1" 200 -
+127.0.0.1 - - [20/Sep/2025 17:05:21] "[35m[1mPOST /api/requests HTTP/1.1[0m" 500 -
+127.0.0.1 - - [20/Sep/2025 17:05:40] "GET /api/requests HTTP/1.1" 200 -
+127.0.0.1 - - [20/Sep/2025 17:05:44] "GET /api/requests/stats HTTP/1.1" 200 -
+127.0.0.1 - - [20/Sep/2025 17:05:56] "GET /api/requests HTTP/1.1" 200 -
+127.0.0.1 - - [20/Sep/2025 17:09:05] "GET /painel.html HTTP/1.1" 200 -
+127.0.0.1 - - [20/Sep/2025 17:09:05] "GET /api/requests HTTP/1.1" 200 -
+127.0.0.1 - - [20/Sep/2025 17:09:05] "GET /api/requests/stats HTTP/1.1" 200 -
+127.0.0.1 - - [20/Sep/2025 17:09:35] "GET /api/requests HTTP/1.1" 200 -
+127.0.0.1 - - [20/Sep/2025 17:09:35] "GET /api/requests/stats HTTP/1.1" 200 -
+127.0.0.1 - - [20/Sep/2025 17:09:53] "PUT /api/requests/EMP2147 HTTP/1.1" 200 -
+127.0.0.1 - - [20/Sep/2025 17:09:53] "GET /api/requests HTTP/1.1" 200 -
+127.0.0.1 - - [20/Sep/2025 17:09:53] "GET /api/requests/stats HTTP/1.1" 200 -
+127.0.0.1 - - [20/Sep/2025 17:10:05] "GET /api/requests HTTP/1.1" 200 -
+127.0.0.1 - - [20/Sep/2025 17:10:05] "GET /api/requests/stats HTTP/1.1" 200 -
+127.0.0.1 - - [20/Sep/2025 17:10:35] "GET /api/requests HTTP/1.1" 200 -
+127.0.0.1 - - [20/Sep/2025 17:10:35] "GET /api/requests/stats HTTP/1.1" 200 -
+127.0.0.1 - - [20/Sep/2025 17:11:05] "GET /api/requests HTTP/1.1" 200 -
+127.0.0.1 - - [20/Sep/2025 17:11:05] "GET /api/requests/stats HTTP/1.1" 200 -
+127.0.0.1 - - [20/Sep/2025 17:11:12] "PUT /api/requests/EMP2148 HTTP/1.1" 200 -
+127.0.0.1 - - [20/Sep/2025 17:11:12] "GET /api/requests HTTP/1.1" 200 -
+127.0.0.1 - - [20/Sep/2025 17:11:12] "GET /api/requests/stats HTTP/1.1" 200 -
+127.0.0.1 - - [20/Sep/2025 17:11:35] "GET /api/requests HTTP/1.1" 200 -
+127.0.0.1 - - [20/Sep/2025 17:11:35] "GET /api/requests/stats HTTP/1.1" 200 -
+127.0.0.1 - - [20/Sep/2025 17:12:05] "GET /api/requests HTTP/1.1" 200 -
+127.0.0.1 - - [20/Sep/2025 17:12:05] "GET /api/requests/stats HTTP/1.1" 200 -
+127.0.0.1 - - [20/Sep/2025 17:12:35] "GET /api/requests HTTP/1.1" 200 -
+127.0.0.1 - - [20/Sep/2025 17:12:35] "GET /api/requests/stats HTTP/1.1" 200 -
+127.0.0.1 - - [20/Sep/2025 17:13:05] "GET /api/requests HTTP/1.1" 200 -
+127.0.0.1 - - [20/Sep/2025 17:13:05] "GET /api/requests/stats HTTP/1.1" 200 -
+127.0.0.1 - - [20/Sep/2025 17:13:35] "GET /api/requests HTTP/1.1" 200 -
+127.0.0.1 - - [20/Sep/2025 17:13:35] "GET /api/requests/stats HTTP/1.1" 200 -
+127.0.0.1 - - [20/Sep/2025 17:14:05] "GET /api/requests HTTP/1.1" 200 -
+127.0.0.1 - - [20/Sep/2025 17:14:05] "GET /api/requests/stats HTTP/1.1" 200 -
+127.0.0.1 - - [20/Sep/2025 17:14:35] "GET /api/requests HTTP/1.1" 200 -
+127.0.0.1 - - [20/Sep/2025 17:14:35] "GET /api/requests/stats HTTP/1.1" 200 -
+127.0.0.1 - - [20/Sep/2025 17:15:05] "GET /api/requests HTTP/1.1" 200 -
+127.0.0.1 - - [20/Sep/2025 17:15:05] "GET /api/requests/stats HTTP/1.1" 200 -
+127.0.0.1 - - [20/Sep/2025 17:15:35] "GET /api/requests HTTP/1.1" 200 -
+127.0.0.1 - - [20/Sep/2025 17:15:35] "GET /api/requests/stats HTTP/1.1" 200 -
+127.0.0.1 - - [20/Sep/2025 17:16:05] "GET /api/requests HTTP/1.1" 200 -
+127.0.0.1 - - [20/Sep/2025 17:16:05] "GET /api/requests/stats HTTP/1.1" 200 -
+127.0.0.1 - - [20/Sep/2025 17:16:35] "GET /api/requests HTTP/1.1" 200 -
+127.0.0.1 - - [20/Sep/2025 17:16:35] "GET /api/requests/stats HTTP/1.1" 200 -
+127.0.0.1 - - [20/Sep/2025 17:17:05] "GET /api/requests HTTP/1.1" 200 -
+127.0.0.1 - - [20/Sep/2025 17:17:05] "GET /api/requests/stats HTTP/1.1" 200 -
+127.0.0.1 - - [20/Sep/2025 17:17:35] "GET /api/requests HTTP/1.1" 200 -
+127.0.0.1 - - [20/Sep/2025 17:17:35] "GET /api/requests/stats HTTP/1.1" 200 -
+127.0.0.1 - - [20/Sep/2025 17:18:05] "GET /api/requests HTTP/1.1" 200 -
+127.0.0.1 - - [20/Sep/2025 17:18:05] "GET /api/requests/stats HTTP/1.1" 200 -

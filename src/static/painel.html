@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel do Operador - Empilhadeira</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚛</text></svg>">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary-color: #3498db; --secondary-color: #2c3e50; --success-color: #27ae60;
+            --warning-color: #f39c12; --danger-color: #e74c3c; --background-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --card-background: #ffffff; --text-primary: #2c3e50; --text-secondary: #6c757d;
+            --border-color: #e9ecef; --shadow: 0 2px 10px rgba(0,0,0,0.1); --border-radius: 12px;
+        }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); min-height: 100vh; color: var(--text-primary); }
+        .header { background: var(--background-gradient); color: white; padding: 30px; position: relative; overflow: hidden; }
+        .header::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/><circle cx="50" cy="10" r="1" fill="white" opacity="0.1"/><circle cx="10" cy="90" r="1" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>'); pointer-events: none; }
+        .header-content { position: relative; z-index: 1; display: flex; justify-content: space-between; align-items: center; max-width: 1200px; margin: 0 auto; flex-wrap: wrap; gap: 20px; }
+        .logo { display: flex; align-items: center; gap: 15px; }
+        .logo-icon { font-size: 3rem; filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.3)); }
+        .logo-text h1 { font-size: 2.5rem; font-weight: 700; margin-bottom: 5px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+        .logo-text p { font-size: 1.1rem; opacity: 0.9; font-weight: 300; }
+        .status-counters { display: flex; gap: 20px; flex-wrap: wrap; }
+        .counter { background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); border-radius: var(--border-radius); padding: 20px 30px; text-align: center; min-width: 120px; transition: all 0.3s ease; }
+        .counter:hover { transform: translateY(-2px); background: rgba(255,255,255,0.25); }
+        .counter-number { display: block; font-size: 2.5rem; font-weight: 700; line-height: 1; margin-bottom: 5px; }
+        .counter-label { font-size: 0.9rem; opacity: 0.9; font-weight: 500; }
+        .counter.pending .counter-number { color: #ff6b6b; } .counter.in-progress .counter-number { color: #ffd93d; } .counter.completed .counter-number { color: #6bcf7f; }
+        .filters-section { background: white; padding: 25px; box-shadow: var(--shadow); border-bottom: 1px solid var(--border-color); }
+        .filters-container { max-width: 1200px; margin: 0 auto; display: flex; gap: 25px; align-items: end; flex-wrap: wrap; }
+        .filter-group { display: flex; flex-direction: column; gap: 8px; min-width: 180px; }
+        .filter-group label { font-weight: 600; color: var(--text-primary); font-size: 0.9rem; }
+        .filter-group select, .filter-group input { padding: 12px 15px; border: 2px solid var(--border-color); border-radius: 8px; font-size: 1rem; transition: all 0.3s ease; background: white; }
+        .filter-group select:focus, .filter-group input:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1); }
+        .refresh-btn { background: var(--primary-color); color: white; border: none; padding: 12px 25px; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; gap: 8px; height: fit-content; }
+        .refresh-btn:hover { background: #2980b9; transform: translateY(-1px); }
+        .main-content { max-width: 1200px; margin: 0 auto; padding: 30px 25px; }
+        .requests-list { display: grid; gap: 20px; }
+        .request-card { background: var(--card-background); border: 1px solid var(--border-color); border-radius: var(--border-radius); padding: 25px; box-shadow: var(--shadow); transition: all 0.3s ease; position: relative; overflow: hidden; }
+        .request-card:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,0.15); }
+        .request-card.status-pendente { border-left: 5px solid var(--danger-color); }
+        .request-card.status-em-andamento { border-left: 5px solid var(--warning-color); }
+        .request-card.status-concluido { border-left: 5px solid var(--success-color); }
+        .request-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;}
+        .request-id { font-size: 1.2rem; font-weight: 700; color: var(--text-secondary); margin-bottom: 5px; }
+        .request-timestamp { font-size: 0.9rem; color: var(--text-secondary); opacity: 0.8; }
+        .request-details { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .detail-item { display: flex; flex-direction: column; gap: 5px; word-wrap: break-word; }
+        .detail-label { font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; }
+        .detail-value { font-size: 1rem; font-weight: 500; color: var(--text-primary); }
+        .priority-tag { display: inline-flex; align-items: center; gap: 5px; padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; color: white; }
+        .priority-tag.urgente { background: var(--danger-color); animation: pulse 2s infinite; }
+        .priority-tag.moderado { background: var(--warning-color); }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+        .card-actions { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
+        .btn { padding: 10px 20px; border: none; border-radius: 8px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; gap: 8px; text-decoration: none; }
+        .btn-primary { background: var(--primary-color); color: white; } .btn-primary:hover { background: #2980b9; }
+        .btn-success { background: var(--success-color); color: white; } .btn-success:hover { background: #219a52; }
+        .btn-secondary { background: var(--text-secondary); color: white; } .btn-secondary:hover { background: #5a6c7d; }
+        .empty-state { text-align: center; padding: 60px 20px; color: var(--text-secondary); display: none; }
+        .empty-icon { font-size: 4rem; margin-bottom: 20px; opacity: 0.5; }
+        .empty-state h3 { font-size: 1.5rem; margin-bottom: 10px; color: var(--text-primary); }
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(5px); }
+        .modal-content { background: white; margin: 10% auto; padding: 0; border-radius: var(--border-radius); width: 90%; max-width: 500px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); animation: modalSlideIn 0.3s ease; }
+        @keyframes modalSlideIn { from { opacity: 0; transform: translateY(-50px); } to { opacity: 1; transform: translateY(0); } }
+        .modal-header { padding: 20px 25px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h3 { margin: 0; color: var(--text-primary); }
+        .modal-close { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-secondary); padding: 0; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border-radius: 50%; transition: all 0.3s ease; }
+        .modal-close:hover { background: var(--border-color); }
+        .modal-body { padding: 25px; }
+        .modal-body textarea { width: 100%; padding: 15px; border: 2px solid var(--border-color); border-radius: 8px; font-size: 1rem; font-family: inherit; resize: vertical; min-height: 100px; }
+        .modal-body textarea:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1); }
+        .modal-footer { padding: 20px 25px; border-top: 1px solid var(--border-color); display: flex; gap: 10px; justify-content: flex-end; }
+        .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; backdrop-filter: blur(5px); }
+        .loading-spinner { width: 50px; height: 50px; border: 4px solid var(--border-color); border-top: 4px solid var(--primary-color); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        #notifications { position: fixed; top: 20px; right: 20px; z-index: 1001; display: flex; flex-direction: column; gap: 10px; }
+        .notification { background: var(--success-color); color: white; padding: 15px 20px; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); animation: slideInRight 0.3s ease, slideOutRight 0.3s ease 2.7s forwards; max-width: 350px; min-width: 250px; }
+        .notification.error { background: var(--danger-color); } .notification.warning { background: var(--warning-color); } .notification.info { background: var(--primary-color); }
+        @keyframes slideInRight { from { opacity: 0; transform: translateX(100%); } to { opacity: 1; transform: translateX(0); } }
+        .api-status { position: fixed; bottom: 20px; right: 20px; background: var(--success-color); color: white; padding: 10px 15px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; z-index: 1000; }
+        .api-status.error { background: var(--danger-color); }
+        @keyframes slideOutRight { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(100%); } }
+    </style>
+</head>
+<body>
+    <div id="notifications"></div>
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-spinner"></div>
+        <p>Carregando dados...</p>
+    </div>
+    
+    <div class="api-status" id="apiStatus">🟢 API Própria Ativa</div>
+    
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <span class="logo-icon">🚛</span>
+                <div class="logo-text">
+                    <h1>Painel do Operador</h1>
+                    <p>Sistema Integrado de Atendimento</p>
+                </div>
+            </div>
+            <div class="status-counters">
+                <div class="counter pending"><span class="counter-number" id="pendingCount">0</span><span class="counter-label">Pendentes</span></div>
+                <div class="counter in-progress"><span class="counter-number" id="inProgressCount">0</span><span class="counter-label">Em Andamento</span></div>
+                <div class="counter completed"><span class="counter-number" id="completedCount">0</span><span class="counter-label">Concluídos</span></div>
+            </div>
+        </div>
+    </header>
+    
+    <section class="filters-section">
+        <div class="filters-container">
+            <div class="filter-group">
+                <label for="statusFilter">Filtrar por Status:</label>
+                <select id="statusFilter">
+                    <option value="todos">Todos</option><option value="pendente">Pendentes</option><option value="em-andamento">Em Andamento</option><option value="concluido">Concluídos</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="areaFilter">Área:</label>
+                <select id="areaFilter"><option value="todos">Todas as Áreas</option></select>
+            </div>
+            <div class="filter-group">
+                <label for="dateFilter">Data:</label>
+                <input type="date" id="dateFilter">
+            </div>
+            <button id="refreshBtn" class="refresh-btn">🔄 Atualizar</button>
+        </div>
+    </section>
+    
+    <main class="main-content">
+        <div id="requestsList" class="requests-list"></div>
+        <div id="emptyState" class="empty-state">
+            <div class="empty-icon">📋</div>
+            <h3>Nenhuma solicitação encontrada</h3>
+            <p>Ajuste os filtros ou aguarde novas solicitações</p>
+        </div>
+    </main>
+    
+    <div id="observationModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Adicionar Observação</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <textarea id="observationText" placeholder="Adicione uma observação sobre o atendimento (opcional)..." rows="4"></textarea>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary modal-cancel">Cancelar</button>
+                <button class="btn btn-primary" id="confirmActionBtn">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===================================================================== //
+        // ==         PAINEL DO OPERADOR v2.0 - API PRÓPRIA INTEGRADA        == //
+        // ===================================================================== //
+        document.addEventListener('DOMContentLoaded', () => {
+            // Nova URL da nossa API própria
+            const API_BASE_URL = '/api';
+            
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const requestsList = document.getElementById('requestsList');
+            const emptyState = document.getElementById('emptyState');
+            const pendingCountEl = document.getElementById('pendingCount');
+            const inProgressCountEl = document.getElementById('inProgressCount');
+            const completedCountEl = document.getElementById('completedCount');
+            const statusFilter = document.getElementById('statusFilter');
+            const areaFilter = document.getElementById('areaFilter');
+            const dateFilter = document.getElementById('dateFilter');
+            const refreshBtn = document.getElementById('refreshBtn');
+            const observationModal = document.getElementById('observationModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const observationText = document.getElementById('observationText');
+            const confirmActionBtn = document.getElementById('confirmActionBtn');
+            const modalCloseBtn = observationModal.querySelector('.modal-close');
+            const modalCancelBtn = observationModal.querySelector('.modal-cancel');
+            const apiStatus = document.getElementById('apiStatus');
+            
+            let allRequests = [];
+            let currentRequestId = null;
+            let currentAction = null;
+
+            const toggleLoading = (show) => { loadingOverlay.style.display = show ? 'flex' : 'none'; };
+
+            const showNotification = (message, type = 'info') => {
+                const notificationsContainer = document.getElementById('notifications');
+                const notification = document.createElement('div');
+                notification.className = `notification ${type}`;
+                notification.textContent = message;
+                notificationsContainer.appendChild(notification);
+                setTimeout(() => { if(notification.parentNode) notification.parentNode.removeChild(notification); }, 3000);
+            };
+
+            const updateApiStatus = (isOnline) => {
+                if (isOnline) {
+                    apiStatus.textContent = '🟢 API Própria Ativa';
+                    apiStatus.className = 'api-status';
+                } else {
+                    apiStatus.textContent = '🔴 API Offline';
+                    apiStatus.className = 'api-status error';
+                }
+            };
+
+            const fetchData = async () => {
+                toggleLoading(true);
+                try {
+                    const response = await fetch(`${API_BASE_URL}/requests`);
+                    if (!response.ok) throw new Error(`Erro de rede: ${response.status}`);
+                    const data = await response.json();
+                    allRequests = data.map(r => ({...r, status: r.status ? String(r.status).toLowerCase().trim() : 'pendente' }));
+                    
+                    await fetchStats();
+                    populateAreaFilter();
+                    render();
+                    updateApiStatus(true);
+                    showNotification('Dados carregados com sucesso!', 'success');
+                } catch (error) {
+                    console.error('Erro ao carregar dados:', error);
+                    updateApiStatus(false);
+                    showNotification('Erro ao carregar dados da API', 'error');
+                } finally {
+                    toggleLoading(false);
+                }
+            };
+
+            const fetchStats = async () => {
+                try {
+                    const response = await fetch(`${API_BASE_URL}/requests/stats`);
+                    if (!response.ok) throw new Error(`Erro ao carregar estatísticas: ${response.status}`);
+                    const stats = await response.json();
+                    
+                    pendingCountEl.textContent = stats.pendentes || 0;
+                    inProgressCountEl.textContent = stats.em_andamento || 0;
+                    completedCountEl.textContent = stats.concluidos || 0;
+                } catch (error) {
+                    console.error('Erro ao carregar estatísticas:', error);
+                }
+            };
+
+            const populateAreaFilter = () => {
+                const areas = [...new Set(allRequests.map(r => r.area).filter(Boolean))];
+                areaFilter.innerHTML = '<option value="todos">Todas as Áreas</option>';
+                areas.forEach(area => {
+                    const option = document.createElement('option');
+                    option.value = area;
+                    option.textContent = area;
+                    areaFilter.appendChild(option);
+                });
+            };
+
+            const render = () => {
+                const filteredRequests = filterRequests();
+                
+                if (filteredRequests.length === 0) {
+                    requestsList.style.display = 'none';
+                    emptyState.style.display = 'block';
+                    return;
+                }
+                
+                requestsList.style.display = 'grid';
+                emptyState.style.display = 'none';
+                
+                requestsList.innerHTML = filteredRequests.map(req => createRequestCard(req)).join('');
+            };
+
+            const filterRequests = () => {
+                return allRequests.filter(req => {
+                    const statusMatch = statusFilter.value === 'todos' || req.status === statusFilter.value;
+                    const areaMatch = areaFilter.value === 'todos' || req.area === areaFilter.value;
+                    
+                    let dateMatch = true;
+                    if (dateFilter.value) {
+                        const filterDate = new Date(dateFilter.value).toLocaleDateString('pt-BR');
+                        const reqDate = req.timestamp.split(' ')[0];
+                        dateMatch = reqDate === filterDate;
+                    }
+                    
+                    return statusMatch && areaMatch && dateMatch;
+                });
+            };
+
+            const createRequestCard = (req) => {
+                const statusClass = `status-${req.status}`;
+                const priorityClass = req.operacao?.includes('Urgente') ? 'urgente' : 'moderado';
+                
+                return `
+                    <div class="request-card ${statusClass}">
+                        <div class="request-header">
+                            <div>
+                                <div class="request-id">${req.id}</div>
+                                <div class="request-timestamp">${req.timestamp}</div>
+                            </div>
+                            <div class="priority-tag ${priorityClass}">
+                                ${req.status === 'pendente' ? '🔴 Pendente' : 
+                                  req.status === 'em-andamento' ? '🟡 Em Andamento' : 
+                                  '🟢 Concluído'}
+                            </div>
+                        </div>
+                        
+                        <div class="request-details">
+                            <div class="detail-item">
+                                <span class="detail-label">Solicitante</span>
+                                <span class="detail-value">${req.solicitante}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Área</span>
+                                <span class="detail-value">${req.area}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Operação</span>
+                                <span class="detail-value">${req.operacao}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Item</span>
+                                <span class="detail-value">${req.item}</span>
+                            </div>
+                            ${req.localizacao ? `
+                            <div class="detail-item">
+                                <span class="detail-label">Localização</span>
+                                <span class="detail-value">${req.localizacao}</span>
+                            </div>
+                            ` : ''}
+                            ${req.observacao ? `
+                            <div class="detail-item">
+                                <span class="detail-label">Observação</span>
+                                <span class="detail-value">${req.observacao}</span>
+                            </div>
+                            ` : ''}
+                            ${req.inicio ? `
+                            <div class="detail-item">
+                                <span class="detail-label">Início</span>
+                                <span class="detail-value">${req.inicio}</span>
+                            </div>
+                            ` : ''}
+                            ${req.conclusao ? `
+                            <div class="detail-item">
+                                <span class="detail-label">Conclusão</span>
+                                <span class="detail-value">${req.conclusao}</span>
+                            </div>
+                            ` : ''}
+                        </div>
+                        
+                        <div class="card-actions">
+                            ${req.status === 'pendente' ? `
+                                <button class="btn btn-primary" onclick="startRequest('${req.id}')">
+                                    ▶️ Iniciar Atendimento
+                                </button>
+                            ` : ''}
+                            ${req.status === 'em-andamento' ? `
+                                <button class="btn btn-success" onclick="completeRequest('${req.id}')">
+                                    ✅ Concluir Atendimento
+                                </button>
+                            ` : ''}
+                            ${req.status !== 'concluido' ? `
+                                <button class="btn btn-secondary" onclick="addObservation('${req.id}')">
+                                    📝 Adicionar Observação
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            };
+
+            const updateRequest = async (empId, data) => {
+                try {
+                    const response = await fetch(`${API_BASE_URL}/requests/${empId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+                    
+                    if (!response.ok) throw new Error(`Erro ao atualizar: ${response.status}`);
+                    
+                    const result = await response.json();
+                    if (result.success) {
+                        await fetchData(); // Recarregar dados
+                        return true;
+                    } else {
+                        throw new Error(result.message || 'Erro desconhecido');
+                    }
+                } catch (error) {
+                    console.error('Erro ao atualizar solicitação:', error);
+                    showNotification('Erro ao atualizar solicitação', 'error');
+                    return false;
+                }
+            };
+
+            // Funções globais para os botões
+            window.startRequest = (empId) => {
+                currentRequestId = empId;
+                currentAction = 'start';
+                modalTitle.textContent = 'Iniciar Atendimento';
+                observationText.placeholder = 'Adicione uma observação sobre o início do atendimento (opcional)...';
+                observationText.value = '';
+                observationModal.style.display = 'block';
+            };
+
+            window.completeRequest = (empId) => {
+                currentRequestId = empId;
+                currentAction = 'complete';
+                modalTitle.textContent = 'Concluir Atendimento';
+                observationText.placeholder = 'Adicione uma observação sobre a conclusão do atendimento (opcional)...';
+                observationText.value = '';
+                observationModal.style.display = 'block';
+            };
+
+            window.addObservation = (empId) => {
+                currentRequestId = empId;
+                currentAction = 'observation';
+                modalTitle.textContent = 'Adicionar Observação';
+                observationText.placeholder = 'Adicione uma observação sobre o atendimento...';
+                observationText.value = '';
+                observationModal.style.display = 'block';
+            };
+
+            // Event listeners
+            confirmActionBtn.addEventListener('click', async () => {
+                if (!currentRequestId || !currentAction) return;
+                
+                const observacao = observationText.value.trim();
+                let updateData = {};
+                
+                switch (currentAction) {
+                    case 'start':
+                        updateData = { status: 'em-andamento' };
+                        if (observacao) updateData.observacao = observacao;
+                        break;
+                    case 'complete':
+                        updateData = { status: 'concluido' };
+                        if (observacao) updateData.observacao = observacao;
+                        break;
+                    case 'observation':
+                        if (!observacao) {
+                            showNotification('Digite uma observação', 'warning');
+                            return;
+                        }
+                        updateData = { observacao };
+                        break;
+                }
+                
+                const success = await updateRequest(currentRequestId, updateData);
+                if (success) {
+                    observationModal.style.display = 'none';
+                    const actionMessages = {
+                        'start': 'Atendimento iniciado com sucesso!',
+                        'complete': 'Atendimento concluído com sucesso!',
+                        'observation': 'Observação adicionada com sucesso!'
+                    };
+                    showNotification(actionMessages[currentAction], 'success');
+                }
+                
+                currentRequestId = null;
+                currentAction = null;
+            });
+
+            [modalCloseBtn, modalCancelBtn].forEach(btn => {
+                btn.addEventListener('click', () => {
+                    observationModal.style.display = 'none';
+                    currentRequestId = null;
+                    currentAction = null;
+                });
+            });
+
+            // Fechar modal clicando fora
+            observationModal.addEventListener('click', (e) => {
+                if (e.target === observationModal) {
+                    observationModal.style.display = 'none';
+                    currentRequestId = null;
+                    currentAction = null;
+                }
+            });
+
+            // Event listeners para filtros
+            [statusFilter, areaFilter, dateFilter].forEach(filter => {
+                filter.addEventListener('change', render);
+            });
+
+            refreshBtn.addEventListener('click', fetchData);
+
+            // Auto-refresh a cada 30 segundos
+            setInterval(fetchData, 30000);
+
+            // Carregar dados iniciais
+            fetchData();
+        });
+    </script>
+</body>
+</html>
