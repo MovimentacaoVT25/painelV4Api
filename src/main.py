@@ -1,63 +1,87 @@
-import os
-import sys
-# DON'T CHANGE THIS !!!
-# Adiciona o diretório raiz do projeto ao path para importações corretas
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import traceback
+from flask import Blueprint, jsonify, request
+from src.models.request import Request, db
+from datetime import datetime
 
-from flask import Flask, send_from_directory
-from flask_cors import CORS
-from src.models.request import db
-from src.routes.requests import requests_bp
+requests_bp = Blueprint('requests', __name__)
 
-# Configuração do App Flask
-app = Flask(__name__, static_folder='static')
-CORS(app) # Habilita CORS para a API
+@requests_bp.route('/requests', methods=['GET'])
+def get_all_requests():
+    """Retorna todas as solicitações"""
+    try:
+        requests_list = Request.query.order_by(Request.timestamp.desc()).all()
+        return jsonify([req.to_dict() for req in requests_list])
+    except Exception as e:
+        print(traceback.format_exc())
+        return jsonify({'success': False, 'message': 'Erro interno ao buscar solicitações.', 'error': str(e)}), 500
 
-# ==========================================================
-# INÍCIO DA CORREÇÃO: Lógica do Banco de Dados para Vercel
-# ==========================================================
+@requests_bp.route('/requests', methods=['POST'])
+def create_request():
+    """Cria uma nova solicitação"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'success': False, 'message': 'Nenhum dado enviado'}), 400
 
-# Verifica se está no ambiente Vercel para definir o caminho do DB
-if os.environ.get('VERCEL'):
-    # No Vercel, o único local gravável é o diretório /tmp
-    db_path = os.path.join('/tmp', 'app.db')
-else:
-    # No ambiente local, cria o DB na pasta 'database'
-    db_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'database')
-    os.makedirs(db_dir, exist_ok=True)
-    db_path = os.path.join(db_dir, 'app.db')
+        new_request = Request(
+            solicitante=data.get('solicitante'),
+            area_solicitante=data.get('area_solicitante'),
+            tipo_operacao=data.get('tipo_operacao'),
+            codigo_item=data.get('codigo_item'),
+            localizacao=data.get('localizacao', ''),
+            tempo_atendimento=data.get('tempo_atendimento') 
+        )
+        db.session.add(new_request)
+        db.session.commit()
+        
+        return jsonify({'success': True, 'message': 'Solicitação criada com sucesso', 'data': new_request.to_dict()}), 201
 
-app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
-# ==========================================================
-# FIM DA CORREÇÃO
-# ==========================================================
+    except Exception as e:
+        # Captura e reporta qualquer erro que acontecer aqui
+        print(traceback.format_exc())
+        db.session.rollback()
+        return jsonify({'success': False, 'message': 'Erro interno ao criar solicitação.', 'error': str(e), 'traceback': traceback.format_exc()}), 500
 
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-db.init_app(app)
+@requests_bp.route('/requests/<emp_id>', methods=['PUT'])
+def update_request_status(emp_id):
+    """Atualiza o status e/ou observação de uma solicitação"""
+    try:
+        req_to_update = Request.query.get(emp_id)
+        if not req_to_update:
+            return jsonify({'success': False, 'message': 'Solicitação não encontrada'}), 404
 
-# Registra os blueprints (rotas da API)
-app.register_blueprint(requests_bp, url_prefix='/api')
+        data = request.get_json()
+        
+        new_status = data.get('status')
+        if new_status and new_status != req_to_update.status:
+            req_to_update.status = new_status
+            if new_status == 'em-andamento' and not req_to_update.inicio_atendimento:
+                req_to_update.inicio_atendimento = datetime.utcnow()
+            elif new_status == 'concluido':
+                req_to_update.conclusao_atendimento = datetime.utcnow()
 
-# Cria as tabelas do banco de dados dentro do contexto da aplicação
-with app.app_context():
-    db.create_all()
+        if 'observacao' in data:
+            req_to_update.observacao = data.get('observacao')
 
-# Rota para servir os arquivos estáticos (index.html, painel.html, etc.)
-# Esta rota não é mais necessária se o vercel.json estiver configurado corretamente,
-# mas é mantida para funcionamento local.
-@app.route('/', defaults={'path': ''})
-@app.route('/<path:path>')
-def serve(path):
-    if path != "" and os.path.exists(os.path.join(app.static_folder, path)):
-        return send_from_directory(app.static_folder, path)
-    else:
-        # Tenta servir 'painel.html' como padrão se 'index.html' não existir
-        index_path = os.path.join(app.static_folder, 'painel.html')
-        if os.path.exists(index_path):
-            return send_from_directory(app.static_folder, 'painel.html')
-        else:
-            return "Página não encontrada.", 404
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Solicitação atualizada com sucesso', 'data': req_to_update.to_dict()})
 
-# Executa o servidor para desenvolvimento local
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    except Exception as e:
+        # Captura e reporta qualquer erro que acontecer aqui
+        print(traceback.format_exc())
+        db.session.rollback()
+        return jsonify({'success': False, 'message': 'Erro interno ao atualizar solicitação.', 'error': str(e), 'traceback': traceback.format_exc()}), 500
+
+@requests_bp.route('/requests/stats', methods=['GET'])
+def get_request_stats():
+    """Retorna as estatísticas das solicitações"""
+    try:
+        stats = {
+            'pendente': Request.query.filter_by(status='pendente').count(),
+            'em_andamento': Request.query.filter_by(status='em-andamento').count(),
+            'concluido': Request.query.filter_by(status='concluido').count()
+        }
+        return jsonify(stats)
+    except Exception as e:
+        print(traceback.format_exc())
+        return jsonify({'success': False, 'message': 'Erro interno ao buscar estatísticas.', 'error': str(e)}), 500
