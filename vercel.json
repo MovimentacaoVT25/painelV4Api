@@ -4,6 +4,10 @@
     {
       "src": "fonte/main.py",
       "use": "@vercel/python"
+    },
+    {
+      "src": "fonte/static/**/*",
+      "use": "@vercel/static"
     }
   ],
   "routes": [
