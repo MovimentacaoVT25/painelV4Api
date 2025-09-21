@@ -55,7 +55,6 @@
             <p class="required-note">* Indica pergunta obrigatória</p>
             
             <form id="requestForm">
-                <!-- Solicitante -->
                 <div class="form-group">
                     <label class="form-label">
                         👤 Solicitante <span class="required">*</span>
@@ -64,7 +63,6 @@
                     <div class="error-message" id="solicitante-error">Este campo é obrigatório</div>
                 </div>
 
-                <!-- Área Solicitante -->
                 <div class="form-group">
                     <label class="form-label">
                         🏢 Área Solicitante <span class="required">*</span>
@@ -110,7 +108,6 @@
                     <div class="error-message" id="area-error">Selecione uma área</div>
                 </div>
 
-                <!-- Tipo de Operação -->
                 <div class="form-group">
                     <label class="form-label">
                         📋 Tipo de Operação <span class="required">*</span>
@@ -132,7 +129,6 @@
                     <div class="error-message" id="operacao-error">Selecione um tipo de operação</div>
                 </div>
 
-                <!-- Código do Item -->
                 <div class="form-group">
                     <label class="form-label">
                         🏷️ Código do Item <span class="required">*</span>
@@ -141,7 +137,6 @@
                     <div class="error-message" id="codigo-error">Este campo é obrigatório</div>
                 </div>
 
-                <!-- Localização -->
                 <div class="form-group">
                     <label class="form-label">
                         📍 Localização (opcional)
@@ -149,7 +144,6 @@
                     <input type="text" id="localizacao" name="localizacao" class="form-input" placeholder="Ex: Estante A-15, Almoxarifado Central">
                 </div>
 
-                <!-- Tempo de Atendimento -->
                 <div class="form-group">
                     <label class="form-label">
                         ⏱️ Tempo de Atendimento <span class="required">*</span>
@@ -289,9 +283,20 @@
                 loading.style.display = 'block';
 
                 try {
-                    // Coletar dados do formulário
-                    const formData = new FormData(form);
-                    const data = Object.fromEntries(formData.entries());
+                    // ==========================================================
+                    // INÍCIO DA CORREÇÃO: Coleta de dados manual
+                    // ==========================================================
+                    const data = {
+                        solicitante: document.getElementById('solicitante').value,
+                        area_solicitante: document.querySelector('input[name="area_solicitante"]:checked')?.value || '',
+                        tipo_operacao: document.querySelector('input[name="tipo_operacao"]:checked')?.value || '',
+                        codigo_item: document.getElementById('codigo_item').value,
+                        localizacao: document.getElementById('localizacao').value,
+                        tempo_atendimento: document.querySelector('input[name="tempo_atendimento"]:checked')?.value || ''
+                    };
+                    // ==========================================================
+                    // FIM DA CORREÇÃO
+                    // ==========================================================
 
                     // Enviar para API
                     const response = await fetch('/api/requests', {
@@ -302,15 +307,20 @@
                         body: JSON.stringify(data)
                     });
 
+                    if (!response.ok) {
+                        const errorResult = await response.json().catch(() => ({ message: 'Erro desconhecido no servidor' }));
+                        throw new Error(errorResult.message || `Erro ${response.status}`);
+                    }
+
                     const result = await response.json();
 
                     if (result.success) {
                         // Mostrar sucesso
                         loading.style.display = 'none';
                         successMessage.style.display = 'block';
-                        requestIdSpan.textContent = result.data.id;
+                        requestIdSpan.textContent = result.data.emp_id || result.data.id; // Garante que o ID correto seja exibido
                         
-                        // Reset form após 3 segundos
+                        // Reset form após 5 segundos
                         setTimeout(() => {
                             form.reset();
                             form.style.display = 'block';
