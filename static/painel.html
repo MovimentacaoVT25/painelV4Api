@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel do Operador - Empilhadeira</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚛</text></svg>">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary-color: #3498db; --secondary-color: #2c3e50; --success-color: #27ae60;
+            --warning-color: #f39c12; --danger-color: #e74c3c; --background-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --card-background: #ffffff; --text-primary: #2c3e50; --text-secondary: #6c757d;
+            --border-color: #e9ecef; --shadow: 0 2px 10px rgba(0,0,0,0.1); --border-radius: 12px;
+        }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); min-height: 100vh; color: var(--text-primary); }
+        .header { background: var(--background-gradient); color: white; padding: 30px; position: relative; overflow: hidden; }
+        .header-content { position: relative; z-index: 1; display: flex; justify-content: space-between; align-items: center; max-width: 1200px; margin: 0 auto; flex-wrap: wrap; gap: 20px; }
+        .logo { display: flex; align-items: center; gap: 15px; }
+        .logo-icon { font-size: 3rem; filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.3)); }
+        .logo-text h1 { font-size: 2.5rem; font-weight: 700; margin-bottom: 5px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+        .logo-text p { font-size: 1.1rem; opacity: 0.9; font-weight: 300; }
+        .status-counters { display: flex; gap: 20px; flex-wrap: wrap; }
+        .counter { background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); border-radius: var(--border-radius); padding: 20px 30px; text-align: center; min-width: 120px; transition: all 0.3s ease; }
+        .counter-number { display: block; font-size: 2.5rem; font-weight: 700; line-height: 1; margin-bottom: 5px; }
+        .counter-label { font-size: 0.9rem; opacity: 0.9; font-weight: 500; }
+        .counter.pending .counter-number { color: #ff6b6b; } .counter.in-progress .counter-number { color: #ffd93d; } .counter.completed .counter-number { color: #6bcf7f; }
+        .filters-section { background: white; padding: 25px; box-shadow: var(--shadow); border-bottom: 1px solid var(--border-color); }
+        .filters-container { max-width: 1200px; margin: 0 auto; display: flex; gap: 25px; align-items: end; flex-wrap: wrap; }
+        .filter-group { display: flex; flex-direction: column; gap: 8px; min-width: 180px; }
+        .filter-group label { font-weight: 600; color: var(--text-primary); font-size: 0.9rem; }
+        .filter-group select, .filter-group input { padding: 12px 15px; border: 2px solid var(--border-color); border-radius: 8px; font-size: 1rem; }
+        .refresh-btn { background: var(--primary-color); color: white; border: none; padding: 12px 25px; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; height: fit-content; }
+        .main-content { max-width: 1200px; margin: 0 auto; padding: 30px 25px; }
+        .requests-list { display: grid; gap: 20px; }
+        .request-card { background: var(--card-background); border: 1px solid var(--border-color); border-radius: var(--border-radius); padding: 25px; box-shadow: var(--shadow); position: relative; }
+        .request-card.status-pendente { border-left: 5px solid var(--danger-color); }
+        .request-card.status-em-andamento { border-left: 5px solid var(--warning-color); }
+        .request-card.status-concluido { border-left: 5px solid var(--success-color); }
+        .request-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
+        .request-id { font-size: 1.2rem; font-weight: 700; }
+        .request-timestamp { font-size: 0.9rem; color: var(--text-secondary); }
+        .request-details { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .detail-item { display: flex; flex-direction: column; gap: 5px; }
+        .detail-item.full-width { grid-column: 1 / -1; }
+        .detail-label { font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; }
+        .detail-value { font-size: 1rem; font-weight: 500; }
+        .card-actions { display: flex; gap: 10px; margin-top: 20px; }
+        .btn { padding: 10px 20px; border: none; border-radius: 8px; font-size: 0.9rem; font-weight: 600; cursor: pointer; }
+        .btn-primary { background: var(--warning-color); color: white; }
+        .btn-success { background: var(--success-color); color: white; }
+        .empty-state { text-align: center; padding: 60px 20px; color: var(--text-secondary); display: none; }
+        .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); display: none; justify-content: center; align-items: center; z-index: 9999; }
+        .loading-spinner { width: 50px; height: 50px; border: 4px solid var(--border-color); border-top: 4px solid var(--primary-color); border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div id="loadingOverlay" class="loading-overlay"><div class="loading-spinner"></div></div>
+    
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <span class="logo-icon">🚛</span>
+                <div class="logo-text"><h1>Painel do Operador</h1><p>Sistema Integrado de Atendimento</p></div>
+            </div>
+            <div class="status-counters">
+                <div class="counter pending"><span class="counter-number" id="pendingCount">0</span><span class="counter-label">Pendentes</span></div>
+                <div class="counter in-progress"><span class="counter-number" id="inProgressCount">0</span><span class="counter-label">Em Andamento</span></div>
+                <div class="counter completed"><span class="counter-number" id="completedCount">0</span><span class="counter-label">Concluídos</span></div>
+            </div>
+        </div>
+    </header>
+    
+    <section class="filters-section">
+        <div class="filters-container">
+            <div class="filter-group"><label for="statusFilter">Filtrar por Status:</label><select id="statusFilter"><option value="todos">Todos</option><option value="pendente">Pendentes</option><option value="em-andamento">Em Andamento</option><option value="concluido">Concluídos</option></select></div>
+            <div class="filter-group"><label for="areaFilter">Área:</label><select id="areaFilter"><option value="todos">Todas as Áreas</option></select></div>
+            <div class="filter-group"><label for="dateFilter">Data:</label><input type="date" id="dateFilter"></div>
+            <button id="refreshBtn" class="refresh-btn">🔄 Atualizar</button>
+        </div>
+    </section>
+    
+    <main class="main-content">
+        <div id="requestsList" class="requests-list"></div>
+        <div id="emptyState" class="empty-state"><h3>Nenhuma solicitação encontrada</h3></div>
+    </main>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const API_BASE_URL = 'https://painel-v4-api.vercel.app/api';
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const requestsList = document.getElementById('requestsList');
+            const emptyState = document.getElementById('emptyState');
+            const pendingCountEl = document.getElementById('pendingCount');
+            const inProgressCountEl = document.getElementById('inProgressCount');
+            const completedCountEl = document.getElementById('completedCount');
+            const statusFilter = document.getElementById('statusFilter');
+            const areaFilter = document.getElementById('areaFilter');
+            const dateFilter = document.getElementById('dateFilter');
+            const refreshBtn = document.getElementById('refreshBtn');
+            let allRequests = [];
+
+            const toggleLoading = (show) => { loadingOverlay.style.display = show ? 'flex' : 'none'; };
+
+            const fetchData = async () => {
+                toggleLoading(true);
+                try {
+                    const [requestsRes, statsRes] = await Promise.all([
+                        fetch(`${API_BASE_URL}/requests`),
+                        fetch(`${API_BASE_URL}/requests/stats`)
+                    ]);
+                    if (!requestsRes.ok || !statsRes.ok) throw new Error('Erro de rede');
+
+                    allRequests = await requestsRes.json();
+                    const stats = await statsRes.json();
+
+                    pendingCountEl.textContent = stats.pendente || 0;
+                    inProgressCountEl.textContent = stats.em_andamento || 0;
+                    completedCountEl.textContent = stats.concluido || 0;
+                    
+                    populateAreaFilter();
+                    render();
+                } catch (error) {
+                    console.error('Erro ao carregar dados:', error);
+                    requestsList.innerHTML = `<p>Erro ao carregar dados. Verifique a conexão com a API.</p>`;
+                } finally {
+                    toggleLoading(false);
+                }
+            };
+
+            const populateAreaFilter = () => {
+                const areas = [...new Set(allRequests.map(r => r.area_solicitante).filter(Boolean))].sort();
+                const currentVal = areaFilter.value;
+                areaFilter.innerHTML = '<option value="todos">Todas as Áreas</option>';
+                areas.forEach(area => {
+                    const option = document.createElement('option');
+                    option.value = area;
+                    option.textContent = area;
+                    areaFilter.appendChild(option);
+                });
+                areaFilter.value = currentVal;
+            };
+
+            const render = () => {
+                const filtered = filterRequests();
+                emptyState.style.display = filtered.length === 0 ? 'block' : 'none';
+                requestsList.innerHTML = filtered.map(createRequestCard).join('');
+            };
+            
+            const filterRequests = () => allRequests.filter(req => 
+                (statusFilter.value === 'todos' || req.status === statusFilter.value) &&
+                (areaFilter.value === 'todos' || req.area_solicitante === areaFilter.value) &&
+                (!dateFilter.value || new Date(req.timestamp).toISOString().slice(0, 10) === dateFilter.value)
+            );
+
+            const createRequestCard = (req) => {
+                const inicio = req.inicio_atendimento ? new Date(req.inicio_atendimento).toLocaleString('pt-BR') : '---';
+                const conclusao = req.conclusao_atendimento ? new Date(req.conclusao_atendimento).toLocaleString('pt-BR') : '---';
+                return `
+                    <div class="request-card status-${req.status}">
+                        <div class="request-header">
+                            <div>
+                                <div class="request-id">${req.emp_id}</div>
+                                <div class="request-timestamp">${new Date(req.timestamp).toLocaleString('pt-BR')}</div>
+                            </div>
+                        </div>
+                        <div class="request-details">
+                            <div class="detail-item"><span class="detail-label">Solicitante</span><span class="detail-value">${req.solicitante}</span></div>
+                            <div class="detail-item"><span class="detail-label">Área</span><span class="detail-value">${req.area_solicitante}</span></div>
+                            <div class="detail-item"><span class="detail-label">Operação</span><span class="detail-value">${req.tipo_operacao}</span></div>
+                            <div class="detail-item"><span class="detail-label">Item</span><span class="detail-value">${req.codigo_item}</span></div>
+                            <div class="detail-item"><span class="detail-label">Início</span><span class="detail-value">${inicio}</span></div>
+                            <div class="detail-item"><span class="detail-label">Conclusão</span><span class="detail-value">${conclusao}</span></div>
+                            ${req.observacao ? `<div class="detail-item full-width"><span class="detail-label">Observação</span><span class="detail-value">${req.observacao}</span></div>` : ''}
+                        </div>
+                        <div class="card-actions">
+                            ${req.status === 'pendente' ? `<button class="btn btn-primary" onclick="updateRequest('${req.emp_id}', 'em-andamento')">▶️ Iniciar</button>` : ''}
+                            ${req.status === 'em-andamento' ? `<button class="btn btn-success" onclick="updateRequest('${req.emp_id}', 'concluido')">✅ Concluir</button>` : ''}
+                        </div>
+                    </div>
+                `;
+            };
+
+            window.updateRequest = async (empId, newStatus) => {
+                toggleLoading(true);
+                try {
+                    const response = await fetch(`${API_BASE_URL}/requests/${empId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ status: newStatus })
+                    });
+                    if (!response.ok) throw new Error('Erro ao atualizar');
+                    await fetchData();
+                } catch (error) {
+                    console.error('Erro ao atualizar solicitação:', error);
+                } finally {
+                    toggleLoading(false);
+                }
+            };
+
+            [statusFilter, areaFilter, dateFilter, refreshBtn].forEach(el => {
+                el.addEventListener('change', fetchData);
+                if (el.tagName === 'BUTTON') el.addEventListener('click', fetchData);
+            });
+
+            fetchData();
+            setInterval(fetchData, 30000); // Auto-refresh
+        });
+    </script>
+</body>
+</html>
